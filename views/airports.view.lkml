@@ -11,153 +11,136 @@ view: airports {
     # A dimension is a groupable field that can be used to filter query results.
     # This dimension will be called "Act Date" in Explore.
 
-  dimension: act_date {
-    type: string
-    sql: ${TABLE}.act_date ;;
-  }
+ dimension: id {
+  primary_key: yes
+  type: number
+  hidden: yes
+  value_format_name: decimal_0
+  sql: ${TABLE}.id ;;
+}
 
-  dimension: aero_cht {
-    type: string
-    sql: ${TABLE}.aero_cht ;;
-  }
+dimension_group: active {
+  hidden: yes       # not working as of 2021-02-16
+  description: "Date this airport became active; if no data, then January 1970"
+  type: time
+  timeframes: [month, month_num, year]
+  convert_tz: no
+  sql: --CASE WHEN ${TABLE}.act_date = '' THEN '1970-01-01'
+          --else
+          timestamp(date(cast(split(${TABLE}.act_date,"/")[offset(1)] as int64)
+                    , cast(split(${TABLE}.act_date,"/")[offset(0)] as int64)
+                    , 01)
+                    )
+          --END
+          ;;
+}
 
-  dimension: c_ldg_rts {
-    type: string
-    sql: ${TABLE}.c_ldg_rts ;;
-  }
+dimension: act_date {   # values are like '01/1903', '12/2000'
+  hidden: yes
+  type: string
+  sql: ${TABLE}.act_date ;;
+}
 
-  dimension: cbd_dir {
-    type: string
-    sql: ${TABLE}.cbd_dir ;;
-  }
+dimension: city {
+  type: string
+  sql: ${TABLE}.city ;;
+}
 
-  dimension: cbd_dist {
-    type: number
-    sql: ${TABLE}.cbd_dist ;;
-  }
+dimension: cntl_twr {
+  hidden: yes
+  type: string
+  sql: ${TABLE}.cntl_twr ;;
+}
 
-  # A measure is a field that uses a SQL aggregate function. Here are defined sum and average
-  # measures for this dimension, but you can also add measures of many different aggregates.
-  # Click on the type parameter to see all the options in the Quick Help panel on the right.
+dimension: control_tower {
+  type: yesno
+  sql: ${TABLE}.cntl_twr = TRUE ;;
+}
 
-  measure: total_cbd_dist {
-    type: sum
-    sql: ${cbd_dist} ;;  }
-  measure: average_cbd_dist {
-    type: average
-    sql: ${cbd_dist} ;;  }
+dimension: code {
+  type: string
+  sql: rtrim(${TABLE}.code) ;;
+}
 
-  dimension: cert {
-    type: string
-    sql: ${TABLE}.cert ;;
-  }
+dimension: county {
+  type: string
+  sql: ${TABLE}.county ;;
+}
 
-  dimension: city {
-    type: string
-    sql: ${TABLE}.city ;;
-  }
+dimension: elevation {
+  hidden: yes
+  type: number
+  value_format_name: decimal_0
+  sql: ${TABLE}.elevation ;;
+}
 
-  dimension: cntl_twr {
-    type: yesno
-    sql: ${TABLE}.cntl_twr ;;
-  }
+dimension: facility_type {
+  type: string
+  sql: ${TABLE}.fac_type ;;
+}
 
-  dimension: code {
-    type: string
-    sql: ${TABLE}.code ;;
-  }
+dimension: full_name {
+  type: string
+  sql: ${TABLE}.full_name ;;
+}
 
-  dimension: county {
-    type: string
-    sql: ${TABLE}.county ;;
-  }
+dimension: joint_use {
+  type: yesno
+  sql: ${TABLE}.joint_use = "Y" ;;
+}
 
-  dimension: cust_intl {
-    type: string
-    sql: ${TABLE}.cust_intl ;;
-  }
+dimension: latitude {
+  type: number
+  sql: ${TABLE}.latitude ;;
+}
 
-  dimension: elevation {
-    type: number
-    sql: ${TABLE}.elevation ;;
-  }
+dimension: longitude {
+  type: number
+  sql: ${TABLE}.longitude ;;
+}
 
-  dimension: faa_dist {
-    type: string
-    sql: ${TABLE}.faa_dist ;;
-  }
+dimension: map_location {
+  type: location
+  sql_latitude: ${latitude} ;;
+  sql_longitude: ${longitude} ;;
+}
 
-  dimension: faa_region {
-    type: string
-    sql: ${TABLE}.faa_region ;;
-  }
+dimension: is_major {
+  type: yesno
+  sql: ${TABLE}.major = TRUE ;;
+}
 
-  dimension: fac_type {
-    type: string
-    sql: ${TABLE}.fac_type ;;
-  }
+dimension: state {
+  type: string
+  map_layer_name: us_states
+  sql: ${TABLE}.state ;;
+}
 
-  dimension: fac_use {
-    type: string
-    sql: ${TABLE}.fac_use ;;
-  }
+measure: count {
+  type: count
+  drill_fields: [id, full_name]
+}
 
-  dimension: fed_agree {
-    type: string
-    sql: ${TABLE}.fed_agree ;;
-  }
+measure: min_elevation {
+  type: min
+  sql: ${elevation} ;;
+}
 
-  dimension: full_name {
-    type: string
-    sql: ${TABLE}.full_name ;;
-  }
+measure: max_elevation {
+  type: max
+  sql: ${elevation} ;;
+}
 
-  dimension: id {
-    type: number
-    sql: ${TABLE}.id ;;
-  }
+measure: average_elevation {
+  type: average
+  sql: ${elevation} ;;
+}
 
-  dimension: joint_use {
-    type: string
-    sql: ${TABLE}.joint_use ;;
+measure: with_control_tower_count {
+  type: count
+  filters: {
+    field: control_tower
+    value: "Yes"
   }
-
-  dimension: latitude {
-    type: number
-    sql: ${TABLE}.latitude ;;
-  }
-
-  dimension: longitude {
-    type: number
-    sql: ${TABLE}.longitude ;;
-  }
-
-  dimension: major {
-    type: yesno
-    sql: ${TABLE}.major ;;
-  }
-
-  dimension: mil_rts {
-    type: string
-    sql: ${TABLE}.mil_rts ;;
-  }
-
-  dimension: own_type {
-    type: string
-    sql: ${TABLE}.own_type ;;
-  }
-
-  dimension: site_number {
-    type: string
-    sql: ${TABLE}.site_number ;;
-  }
-
-  dimension: state {
-    type: string
-    sql: ${TABLE}.state ;;
-  }
-  measure: count {
-    type: count
-    drill_fields: [full_name]
-  }
+}
 }
